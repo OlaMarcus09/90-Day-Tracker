@@ -1,18 +1,55 @@
-const CACHE_NAME = 'tracker90-v1'
-const ASSETS = ['/', '/index.html', '/manifest.webmanifest']
+// Bump this on every deploy that changes cache behavior — forces old clients to drop stale caches.
+const CACHE_NAME = 'tracker90-v2'
+const ASSETS = ['/manifest.webmanifest']
 
 self.addEventListener('install', (event) => {
-  event.waitUntil(caches.open(CACHE_NAME).then((cache) => cache.addAll(ASSETS)))
+  event.waitUntil(
+    caches.open(CACHE_NAME).then((cache) => cache.addAll(ASSETS)).then(() => self.skipWaiting()),
+  )
 })
 
 self.addEventListener('activate', (event) => {
   event.waitUntil(
-    caches.keys().then((keys) =>
-      Promise.all(keys.filter((key) => key !== CACHE_NAME).map((key) => caches.delete(key))),
-    ),
+    caches
+      .keys()
+      .then((keys) => Promise.all(keys.filter((key) => key !== CACHE_NAME).map((key) => caches.delete(key))))
+      .then(() => self.clients.claim()),
   )
 })
 
 self.addEventListener('fetch', (event) => {
-  event.respondWith(caches.match(event.request).then((response) => response || fetch(event.request)))
+  const { request } = event
+  const url = new URL(request.url)
+
+  // HTML / navigation requests: always go to the network first so a redeploy is
+  // visible immediately. Only fall back to cache if the network is unreachable
+  // (e.g. offline), so the app still opens with the last-known shell.
+  const isNavigation = request.mode === 'navigate' || url.pathname === '/' || url.pathname.endsWith('.html')
+
+  if (isNavigation) {
+    event.respondWith(
+      fetch(request)
+        .then((response) => {
+          const copy = response.clone()
+          caches.open(CACHE_NAME).then((cache) => cache.put(request, copy))
+          return response
+        })
+        .catch(() => caches.match(request).then((cached) => cached || caches.match('/manifest.webmanifest'))),
+    )
+    return
+  }
+
+  // Hashed static assets (JS/CSS from Vite's build) are safe to cache-first since
+  // their filenames change whenever the content changes.
+  event.respondWith(
+    caches.match(request).then(
+      (cached) =>
+        cached ||
+        fetch(request).then((response) => {
+          const copy = response.clone()
+          caches.open(CACHE_NAME).then((cache) => cache.put(request, copy))
+          return response
+        }),
+    ),
+  )
 })
