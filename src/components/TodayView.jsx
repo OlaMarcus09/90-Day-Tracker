@@ -14,10 +14,10 @@ function TodayView() {
 
   return (
     <section className="card">
-      <p className="eyebrow">Today</p>
+      <p className="eyebrow" data-phase={phase.toLowerCase()}>{phase}</p>
       <h1>Day {dayNumber || 1} of 90</h1>
       <p className="muted">
-        {phase} phase · Streak {streaks.currentStreak} 🔥
+        Streak {streaks.currentStreak} 🔥
       </p>
 
       <ul className="checklist">
