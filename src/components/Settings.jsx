@@ -18,7 +18,7 @@ function Settings() {
 
   const handleSave = (event) => {
     event.preventDefault()
-    updateProfile({ name, startDate })
+    updateProfile({ name, startDate: startDate || state.profile.startDate })
     updateChecklist(items)
   }
 
@@ -35,7 +35,12 @@ function Settings() {
 
         <label>
           Start date
-          <input type="date" value={startDate} onChange={(event) => setStartDate(event.target.value)} />
+          <input
+            type="date"
+            value={startDate}
+            onChange={(event) => setStartDate(event.target.value)}
+            required
+          />
         </label>
 
         <h2>Daily checklist</h2>
