@@ -1,0 +1,38 @@
+:root {
+  font-family: 'Inter', 'Avenir Next', Avenir, sans-serif;
+  color: #2f2a26;
+  background: #f7f3eb;
+  line-height: 1.45;
+  font-synthesis: none;
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  min-height: 100svh;
+  background: #f7f3eb;
+}
+
+h1,
+h2,
+h3 {
+  margin: 0;
+  font-family: 'DM Sans', 'Inter', sans-serif;
+  color: #2a241f;
+}
+
+p {
+  margin: 0;
+}
+
+button,
+input,
+textarea {
+  font: inherit;
+}
