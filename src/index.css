@@ -1,7 +1,19 @@
 :root {
-  font-family: 'Inter', 'Avenir Next', Avenir, sans-serif;
-  color: #2f2a26;
-  background: #f7f3eb;
+  --bg: #15130f;
+  --surface: #1e1b16;
+  --surface-hi: #282318;
+  --hairline: #3a342a;
+  --text: #eee6d8;
+  --text-soft: #9c9282;
+  --text-faint: #6b6455;
+  --gold: #c9a24b;
+  --foundation: #7b93a8;
+  --momentum: #c9a24b;
+  --compound: #7fa37a;
+
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  color: var(--text);
+  background: var(--bg);
   line-height: 1.45;
   font-synthesis: none;
   text-rendering: optimizeLegibility;
@@ -16,15 +28,16 @@
 body {
   margin: 0;
   min-height: 100svh;
-  background: #f7f3eb;
+  background: var(--bg);
 }
 
 h1,
 h2,
 h3 {
   margin: 0;
-  font-family: 'DM Sans', 'Inter', sans-serif;
-  color: #2a241f;
+  font-family: Georgia, 'Times New Roman', serif;
+  color: var(--text);
+  font-weight: 700;
 }
 
 p {
