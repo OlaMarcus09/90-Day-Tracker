@@ -120,12 +120,33 @@ const loadInitialState = () => {
 
 export function AppStateProvider({ children }) {
   const [state, setState] = useState(loadInitialState)
+  const [today, setToday] = useState(getLocalDateString)
 
   useEffect(() => {
     localStorage.setItem(STORAGE_KEY, JSON.stringify(state))
   }, [state])
 
-  const today = getLocalDateString()
+  useEffect(() => {
+    let timeoutId
+
+    const scheduleMidnightUpdate = () => {
+      const now = new Date()
+      const nextMidnight = new Date(now)
+      nextMidnight.setHours(24, 0, 0, 0)
+      timeoutId = setTimeout(
+        () => {
+          setToday(getLocalDateString())
+          scheduleMidnightUpdate()
+        },
+        Math.max(nextMidnight.getTime() - now.getTime(), 0),
+      )
+    }
+
+    scheduleMidnightUpdate()
+
+    return () => clearTimeout(timeoutId)
+  }, [])
+
   const dayNumber = state.profile.startDate
     ? diffDaysInclusive(state.profile.startDate, today)
     : 0
@@ -272,15 +293,13 @@ export function AppStateProvider({ children }) {
   }, [])
 
   const updateProfile = useCallback(({ name, startDate }) => {
-    const endDate = addDays(startDate, 89)
-
     setState((prev) => ({
       ...prev,
       profile: {
         ...prev.profile,
         name: name.trim(),
-        startDate,
-        endDate,
+        startDate: startDate || prev.profile.startDate,
+        endDate: startDate ? addDays(startDate, 89) : prev.profile.endDate,
       },
     }))
   }, [])

@@ -1,7 +1,10 @@
 import { useMemo } from 'react'
 import { useAppState } from '../state/useAppState.jsx'
 
-const statusOrder = ['complete', 'partial', 'missed', 'future']
+const getLocalDateString = (date) => {
+  const timezoneOffset = date.getTimezoneOffset() * 60 * 1000
+  return new Date(date.getTime() - timezoneOffset).toISOString().split('T')[0]
+}
 
 function HistoryView() {
   const { state, dayNumber, streaks } = useAppState()
@@ -18,7 +21,7 @@ function HistoryView() {
 
       const date = new Date(`${state.profile.startDate}T00:00:00`)
       date.setDate(date.getDate() + index)
-      const dateKey = date.toISOString().split('T')[0]
+      const dateKey = getLocalDateString(date)
       const log = state.dailyLogs[dateKey]
 
       if (!log) {
@@ -35,7 +38,7 @@ function HistoryView() {
         return { day, status: 'partial' }
       }
       return { day, status: 'missed' }
-    }).sort((a, b) => statusOrder.indexOf(a.status) - statusOrder.indexOf(b.status))
+    })
   }, [state, dayNumber])
 
   const progressPercent = Math.max(0, Math.min((dayNumber / 90) * 100, 100))
