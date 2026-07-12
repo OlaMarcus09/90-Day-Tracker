@@ -1,5 +1,5 @@
 // Bump this on every deploy that changes cache behavior — forces old clients to drop stale caches.
-const CACHE_NAME = 'tracker90-v2'
+const CACHE_NAME = 'tracker90-v3'
 const ASSETS = ['/manifest.webmanifest']
 
 self.addEventListener('install', (event) => {
@@ -20,22 +20,21 @@ self.addEventListener('activate', (event) => {
 self.addEventListener('fetch', (event) => {
   const { request } = event
 
-  // Only GET requests are cacheable — POST/PUT/DELETE (like Supabase writes)
-  // must go straight to the network untouched, or cache.put() throws.
   if (request.method !== 'GET') {
     return
   }
 
   const url = new URL(request.url)
 
-  // HTML / navigation requests: always go to the network first so a redeploy is
-  // visible immediately. Only fall back to cache if the network is unreachable
-  // (e.g. offline), so the app still opens with the last-known shell.
+  if (!request.url.startsWith('http') || url.origin !== self.location.origin) {
+    return
+  }
+
   const isNavigation = request.mode === 'navigate' || url.pathname === '/' || url.pathname.endsWith('.html')
 
   if (isNavigation) {
     event.respondWith(
-      fetch(request)
+      fetch(request, { cache: 'no-store' })
         .then((response) => {
           const copy = response.clone()
           caches.open(CACHE_NAME).then((cache) => cache.put(request, copy))
@@ -46,8 +45,6 @@ self.addEventListener('fetch', (event) => {
     return
   }
 
-  // Hashed static assets (JS/CSS from Vite's build) are safe to cache-first since
-  // their filenames change whenever the content changes.
   event.respondWith(
     caches.match(request).then(
       (cached) =>
