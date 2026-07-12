@@ -1,12 +1,11 @@
 import { useState } from 'react'
 import { useAppState } from '../state/useAppState.jsx'
 
-function Settings() {
-  const { state, updateProfile, updateChecklist, exportData } = useAppState()
+function Settings({ onSignOut }) {
+  const { state, updateChecklist, exportData } = useAppState()
 
-  const [name, setName] = useState(state.profile.name)
-  const [startDate, setStartDate] = useState(state.profile.startDate)
   const [items, setItems] = useState(state.checklist.map((item) => item.text))
+  const [saved, setSaved] = useState(false)
 
   const updateItem = (index, value) => {
     setItems((prev) => prev.map((item, i) => (i === index ? value : item)))
@@ -18,8 +17,9 @@ function Settings() {
 
   const handleSave = (event) => {
     event.preventDefault()
-    updateProfile({ name, startDate })
     updateChecklist(items)
+    setSaved(true)
+    setTimeout(() => setSaved(false), 2000)
   }
 
   return (
@@ -27,17 +27,20 @@ function Settings() {
       <p className="eyebrow">Settings</p>
       <h1>Profile and checklist</h1>
 
+      <div className="mini-card">
+        <p className="muted" style={{ fontSize: '0.82rem' }}>
+          Name: <strong>{state.profile.name || '—'}</strong>
+        </p>
+        <p className="muted" style={{ fontSize: '0.82rem' }}>
+          Team start date: <strong>{state.profile.startDate || '—'}</strong>
+        </p>
+        <p className="muted" style={{ fontSize: '0.75rem' }}>
+          Your name comes from your account, and the start date is shared by the whole team — neither
+          is editable from here.
+        </p>
+      </div>
+
       <form className="form" onSubmit={handleSave}>
-        <label>
-          Name
-          <input value={name} onChange={(event) => setName(event.target.value)} />
-        </label>
-
-        <label>
-          Start date
-          <input type="date" value={startDate} onChange={(event) => setStartDate(event.target.value)} />
-        </label>
-
         <h2>Daily checklist</h2>
         {items.map((item, index) => (
           <div className="row" key={`settings-item-${index}`}>
@@ -69,11 +72,18 @@ function Settings() {
         <button type="submit" className="primary-button">
           Save settings
         </button>
+        {saved && <p className="success-pill">Saved</p>}
       </form>
 
       <button type="button" className="secondary-button" onClick={exportData}>
         Export data as JSON
       </button>
+
+      {onSignOut && (
+        <button type="button" className="ghost-button" onClick={onSignOut}>
+          Sign out
+        </button>
+      )}
     </section>
   )
 }

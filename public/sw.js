@@ -19,6 +19,13 @@ self.addEventListener('activate', (event) => {
 
 self.addEventListener('fetch', (event) => {
   const { request } = event
+
+  // Only GET requests are cacheable — POST/PUT/DELETE (like Supabase writes)
+  // must go straight to the network untouched, or cache.put() throws.
+  if (request.method !== 'GET') {
+    return
+  }
+
   const url = new URL(request.url)
 
   // HTML / navigation requests: always go to the network first so a redeploy is

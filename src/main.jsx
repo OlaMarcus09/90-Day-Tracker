@@ -2,9 +2,13 @@ import { StrictMode } from 'react'
 import { createRoot } from 'react-dom/client'
 import App from './App.jsx'
 import './index.css'
-import { AppStateProvider } from './state/useAppState.jsx'
+import { AuthProvider } from './state/useAuth.jsx'
 
-if ('serviceWorker' in navigator) {
+// Service workers must never run against the Vite dev server — they intercept
+// requests and can serve stale cached JS while you're actively editing files,
+// causing exactly the kind of "works, then mysteriously doesn't" bugs that are
+// nearly impossible to diagnose. Production-build only.
+if ('serviceWorker' in navigator && import.meta.env.PROD) {
   window.addEventListener('load', () => {
     navigator.serviceWorker.register('/sw.js')
   })
@@ -12,8 +16,8 @@ if ('serviceWorker' in navigator) {
 
 createRoot(document.getElementById('root')).render(
   <StrictMode>
-    <AppStateProvider>
+    <AuthProvider>
       <App />
-    </AppStateProvider>
+    </AuthProvider>
   </StrictMode>,
 )
