@@ -3,6 +3,7 @@ import { useAppState } from '../state/useAppState.jsx'
 import { useAuth } from '../state/useAuth.jsx'
 import {
   pushSupported,
+  pushPermission,
   enablePush,
   disablePush,
   updateReminderHour,
@@ -133,7 +134,7 @@ function Settings({ onSignOut }) {
             {pushError && (
               <p style={{ color: '#c97b6a', fontSize: '0.8rem', marginTop: '0.4rem' }}>{pushError}</p>
             )}
-            {currentPermission() === 'denied' && (
+            {pushPermission() === 'denied' && (
               <p className="muted" style={{ fontSize: '0.72rem', marginTop: '0.4rem' }}>
                 Notifications are blocked in your browser settings — you will need to re-allow them there.
               </p>
