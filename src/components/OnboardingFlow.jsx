@@ -43,7 +43,7 @@ function OnboardingFlow() {
   return (
     <main className="layout">
       <section className="card">
-        <h1>90-Day Tracker</h1>
+        <h1>Compound</h1>
         <p className="muted">Set your plan once, then show up daily.</p>
 
         <form className="form" onSubmit={handleSubmit}>

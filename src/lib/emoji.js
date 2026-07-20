@@ -39,7 +39,7 @@ const APP_URL = 'https://90-day-tracker-mu.vercel.app/'
  */
 export function buildShareText(dayNumber, streak) {
   const flame = streak > 0 ? ` ${streakEmoji(streak)}` : ''
-  return `Day ${dayNumber} of 90${flame} — tracking my 90-day goal with 90-Day Tracker`
+  return `Day ${dayNumber} of 90${flame} — compounding daily progress toward my 90-day goal with Compound`
 }
 
 /**

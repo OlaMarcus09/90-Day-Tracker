@@ -52,7 +52,7 @@ export default function AuthScreen() {
   return (
     <div className="layout">
       <div style={{ marginTop: '2.5rem', marginBottom: '1.5rem', textAlign: 'center' }}>
-        <p className="eyebrow">90-Day Tracker</p>
+        <p className="eyebrow">Compound</p>
         <h1 style={{ fontSize: '1.6rem', marginTop: '0.3rem' }}>
           {isSignUp ? 'Create your account' : 'Welcome back'}
         </h1>

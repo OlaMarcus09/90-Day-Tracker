@@ -6,12 +6,15 @@ import Settings from './components/Settings'
 import TodayView from './components/TodayView'
 import WeeklyReview from './components/WeeklyReview'
 import AuthScreen from './components/AuthScreen'
+import LandingScreen from './components/LandingScreen'
 import TeamSetup from './components/TeamSetup'
 import TeamProgress from './components/TeamProgress'
 import { AppStateProvider, useAppState } from './state/useAppState.jsx'
 import { useAuth } from './state/useAuth.jsx'
 import { supabase } from './lib/supabaseClient'
 import './App.css'
+
+const SEEN_LANDING_KEY = 'compound_seen_landing'
 
 const NAV_ITEMS = [
   { id: 'today', label: 'Today' },
@@ -67,6 +70,24 @@ function App() {
   const { isAuthenticated, loading: authLoading, user, signOut } = useAuth()
   const [team, setTeam] = useState(null)
   const [teamLoading, setTeamLoading] = useState(true)
+  // Returning visitors skip the pitch and land straight on sign-in. First-time
+  // visitors see the landing screen until they tap "Get started".
+  const [showLanding, setShowLanding] = useState(() => {
+    try {
+      return localStorage.getItem(SEEN_LANDING_KEY) !== '1'
+    } catch {
+      return true
+    }
+  })
+
+  const dismissLanding = () => {
+    try {
+      localStorage.setItem(SEEN_LANDING_KEY, '1')
+    } catch {
+      // localStorage unavailable — user just sees the landing again next time.
+    }
+    setShowLanding(false)
+  }
 
   // Looks up whether the signed-in user already belongs to a team.
   // Assumes one team per user for now — revisit if multi-team support is wanted later.
@@ -102,6 +123,9 @@ function App() {
   }
 
   if (!isAuthenticated) {
+    if (showLanding) {
+      return <LandingScreen onGetStarted={dismissLanding} />
+    }
     return <AuthScreen />
   }
 

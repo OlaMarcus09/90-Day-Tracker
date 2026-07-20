@@ -24,7 +24,13 @@ export function AuthProvider({ children }) {
     const { error } = await supabase.auth.signUp({
       email,
       password,
-      options: { data: { full_name: fullName } },
+      options: {
+        data: { full_name: fullName },
+        // Sends the user back to wherever they actually signed up from —
+        // localhost while testing, the live domain for real users — instead
+        // of a hardcoded URL that breaks in one environment or the other.
+        emailRedirectTo: window.location.origin,
+      },
     })
     if (error) throw error
   }, [])

@@ -1,6 +1,7 @@
 import { useAppState } from '../state/useAppState.jsx'
 import { streakEmoji, completionEmoji, allDoneMessage } from '../lib/emoji.js'
 import ShareProgress from './ShareProgress.jsx'
+import MilestoneCelebration from './MilestoneCelebration.jsx'
 
 function TodayView() {
   const {
@@ -23,6 +24,18 @@ function TodayView() {
       <p className="muted">
         {streaks.currentStreak > 0 ? `Streak ${streaks.currentStreak} ${streakEmoji(streaks.currentStreak)}` : 'No streak yet — today starts it'}
       </p>
+      {streaks.freezesRemaining > 0 ? (
+        <p className="muted" style={{ fontSize: '0.8rem' }}>
+          {'❄️'.repeat(streaks.freezesRemaining)} {streaks.freezesRemaining} freeze{streaks.freezesRemaining > 1 ? 's' : ''} banked — one missed day won't break your streak
+        </p>
+      ) : null}
+
+      {state.goal.statement?.trim() ? (
+        <div className="goal-reminder">
+          <p className="eyebrow">Why you're here</p>
+          <p>{state.goal.statement}</p>
+        </div>
+      ) : null}
       {state.checklist.length > 0 && (
         <p style={{ fontSize: '1.1rem', letterSpacing: '0.05em' }}>
           {completionEmoji(completedCount, state.checklist.length)}
@@ -60,6 +73,8 @@ function TodayView() {
       {allDoneToday ? <p className="success-pill">{allDoneMessage(dayNumber)}</p> : null}
 
       <ShareProgress dayNumber={dayNumber || 1} streak={streaks.currentStreak} />
+
+      <MilestoneCelebration dayNumber={dayNumber} currentStreak={streaks.currentStreak} />
     </section>
   )
 }

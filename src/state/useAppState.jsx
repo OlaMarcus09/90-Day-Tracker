@@ -27,8 +27,18 @@ const addDays = (dateString, days) => {
   return getLocalDateString(date)
 }
 
+// Freezes make a single missed day survivable instead of instantly resetting
+// the streak to zero — real life breaks streaks, and a hard reset is the fastest
+// way to make someone quit on day 12. You earn 1 freeze for every 7 fully
+// completed days and can bank up to 3. Freezes are fully DERIVED from the logs,
+// so there's nothing to persist — recomputing always yields the same result.
+const FREEZE_EARN_EVERY = 7
+const FREEZE_CAP = 3
+
 const calculateStreaks = (dailyLogs, checklist, startDate, endDate, today) => {
-  if (!startDate || !checklist.length) return { currentStreak: 0, longestStreak: 0 }
+  if (!startDate || !checklist.length) {
+    return { currentStreak: 0, longestStreak: 0, freezesRemaining: 0, freezeUsedInStreak: false }
+  }
   const allIds = checklist.map((item) => item.id)
   const dates = []
   let cursor = startDate
@@ -36,26 +46,57 @@ const calculateStreaks = (dailyLogs, checklist, startDate, endDate, today) => {
     dates.push(cursor)
     cursor = addDays(cursor, 1)
   }
+
+  const isComplete = (dateKey) => {
+    const log = dailyLogs[dateKey]
+    return !!log && allIds.length > 0 && allIds.every((id) => !!log.checks?.[id])
+  }
+
+  // Longest streak + total earned freezes both come from a single forward pass.
   let longest = 0
   let running = 0
+  let totalCompleted = 0
   dates.forEach((dateKey) => {
-    const log = dailyLogs[dateKey]
-    const completed = !!log && allIds.length > 0 && allIds.every((id) => !!log.checks?.[id])
-    if (completed) {
+    if (isComplete(dateKey)) {
       running += 1
+      totalCompleted += 1
       longest = Math.max(longest, running)
     } else {
       running = 0
     }
   })
-  let current = 0
-  for (let i = dates.length - 1; i >= 0; i -= 1) {
-    const log = dailyLogs[dates[i]]
-    const completed = !!log && allIds.length > 0 && allIds.every((id) => !!log.checks?.[id])
-    if (!completed) break
-    current += 1
+
+  // Total freezes ever earned, capped. We'll subtract any spent below.
+  const earnedFreezes = Math.min(Math.floor(totalCompleted / FREEZE_EARN_EVERY), FREEZE_CAP)
+
+  // Walk backward for the current streak. Skip today if it's not yet complete
+  // (the day isn't over — no penalty for a checklist you haven't finished yet).
+  let startIndex = dates.length - 1
+  if (dates.length && dates[startIndex] === today && !isComplete(today)) {
+    startIndex -= 1
   }
-  return { currentStreak: current, longestStreak: longest }
+
+  let current = 0
+  let freezesSpent = 0
+  let freezeUsedInStreak = false
+  for (let i = startIndex; i >= 0; i -= 1) {
+    if (isComplete(dates[i])) {
+      current += 1
+    } else if (freezesSpent < earnedFreezes) {
+      // A miss inside the streak — spend a freeze to bridge it and keep going.
+      freezesSpent += 1
+      freezeUsedInStreak = true
+    } else {
+      break
+    }
+  }
+
+  return {
+    currentStreak: current,
+    longestStreak: longest,
+    freezesRemaining: Math.max(earnedFreezes - freezesSpent, 0),
+    freezeUsedInStreak,
+  }
 }
 
 // NOTE: startDate is now team.start_date (shared across the team), not a
@@ -270,6 +311,7 @@ export function AppStateProvider({ children, team }) {
   const value = useMemo(
     () => ({
       state: { profile: { name: userName, startDate, endDate }, goal, checklist, dailyLogs, weeklyReviews },
+      teamId,
       today,
       dayNumber: boundedDay,
       phase,
@@ -290,6 +332,7 @@ export function AppStateProvider({ children, team }) {
     }),
     [
       userName, startDate, endDate, goal, checklist, dailyLogs, weeklyReviews,
+      teamId,
       today, boundedDay, phase, todayLog, allDoneToday, streaks,
       currentWeek, isWeeklyReviewDue, isOnboarded, loaded,
       completeOnboarding, toggleTodayChecklist, updateTodayNote,

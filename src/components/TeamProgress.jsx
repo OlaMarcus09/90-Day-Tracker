@@ -1,6 +1,8 @@
 import { useCallback, useEffect, useState } from 'react'
 import { supabase } from '../lib/supabaseClient'
 import { streakEmoji, completionEmoji, allDoneMessage } from '../lib/emoji'
+import { useAuth } from '../state/useAuth.jsx'
+import { REACTIONS, NUDGE_EMOJI, sendNudge } from '../lib/nudges.js'
 
 function InviteCode({ code }) {
   const [copied, setCopied] = useState(false)
@@ -28,10 +30,27 @@ function InviteCode({ code }) {
 }
 
 export default function TeamProgress({ team }) {
+  const { user } = useAuth()
   const [rows, setRows] = useState([])
   const [visibility, setVisibility] = useState(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
+  const [toast, setToast] = useState('')
+  const [sending, setSending] = useState(null) // user_id currently being nudged
+
+  const handleNudge = useCallback(
+    async (toUserId, emoji) => {
+      if (!user?.id || toUserId === user.id) return
+      setSending(toUserId)
+      const result = await sendNudge({ fromUserId: user.id, toUserId, teamId: team.id, emoji })
+      setSending(null)
+      if (result.ok) {
+        setToast(`${emoji} sent`)
+        setTimeout(() => setToast(''), 2000)
+      }
+    },
+    [user?.id, team.id],
+  )
 
   const loadProgress = useCallback(async () => {
     setError('')
@@ -61,7 +80,8 @@ export default function TeamProgress({ team }) {
   useEffect(() => {
     loadProgress()
 
-    // Live-update when anyone on the team logs a completion.
+    // Live-update when anyone on the team logs a completion, and surface
+    // nudges aimed at the current user as they arrive.
     const channel = supabase
       .channel(`team-progress-${team.id}`)
       .on(
@@ -69,10 +89,18 @@ export default function TeamProgress({ team }) {
         { event: '*', schema: 'public', table: 'daily_logs', filter: `team_id=eq.${team.id}` },
         () => loadProgress(),
       )
+      .on(
+        'postgres_changes',
+        { event: 'INSERT', schema: 'public', table: 'nudges', filter: `to_user=eq.${user?.id}` },
+        (payload) => {
+          setToast(`${payload.new.emoji} A teammate nudged you`)
+          setTimeout(() => setToast(''), 4000)
+        },
+      )
       .subscribe()
 
     return () => supabase.removeChannel(channel)
-  }, [team.id, loadProgress])
+  }, [team.id, loadProgress, user?.id])
 
   if (loading) {
     return (
@@ -84,6 +112,8 @@ export default function TeamProgress({ team }) {
 
   return (
     <div className="layout">
+      {toast && <div className="nudge-toast">{toast}</div>}
+
       <p className="eyebrow">{team.name}</p>
       <h1 style={{ fontSize: '1.5rem', marginTop: '0.3rem', marginBottom: '1.2rem' }}>Team progress today</h1>
 
@@ -115,6 +145,34 @@ export default function TeamProgress({ team }) {
                 <p className="muted" style={{ fontSize: '0.82rem' }}>
                   {row.completed_count}/{row.total_count} done today
                 </p>
+              )}
+
+              {user?.id && row.user_id !== user.id && (
+                <div className="row" style={{ gap: '0.4rem', flexWrap: 'wrap' }}>
+                  <button
+                    type="button"
+                    className="ghost-button"
+                    style={{ padding: '0.3rem 0.7rem' }}
+                    onClick={() => handleNudge(row.user_id, NUDGE_EMOJI)}
+                    disabled={sending === row.user_id}
+                    aria-label={`Nudge ${row.full_name || 'teammate'}`}
+                  >
+                    {NUDGE_EMOJI} Nudge
+                  </button>
+                  {REACTIONS.map(({ emoji, label }) => (
+                    <button
+                      key={emoji}
+                      type="button"
+                      className="ghost-button"
+                      style={{ padding: '0.3rem 0.6rem', fontSize: '1rem' }}
+                      onClick={() => handleNudge(row.user_id, emoji)}
+                      disabled={sending === row.user_id}
+                      aria-label={`Send ${label} to ${row.full_name || 'teammate'}`}
+                    >
+                      {emoji}
+                    </button>
+                  ))}
+                </div>
               )}
             </div>
           )

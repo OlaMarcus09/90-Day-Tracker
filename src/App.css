@@ -208,6 +208,34 @@ button:disabled {
   gap: 0.45rem;
 }
 
+.nudge-toast {
+  position: fixed;
+  left: 50%;
+  top: 1rem;
+  transform: translateX(-50%);
+  z-index: 50;
+  background: var(--surface-hi);
+  border: 1px solid var(--gold);
+  color: var(--text);
+  padding: 0.6rem 1rem;
+  border-radius: 999px;
+  font-size: 0.9rem;
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.35);
+}
+
+.goal-reminder {
+  border-left: 2px solid var(--gold);
+  padding: 0.5rem 0 0.5rem 0.75rem;
+  display: grid;
+  gap: 0.3rem;
+}
+
+.goal-reminder p:last-child {
+  font-size: 0.9rem;
+  color: var(--text-soft);
+  font-style: italic;
+}
+
 .phase-bar {
   background: var(--hairline);
   border-radius: 999px;
@@ -293,6 +321,108 @@ button:disabled {
 .eyebrow[data-phase="foundation"] { color: var(--foundation); }
 .eyebrow[data-phase="momentum"] { color: var(--momentum); }
 .eyebrow[data-phase="compound"] { color: var(--compound); }
+
+.milestone-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 50;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 1.5rem;
+  background: rgba(10, 8, 4, 0.55);
+  backdrop-filter: blur(4px);
+  animation: milestone-fade 220ms ease-out;
+}
+
+.milestone-card {
+  background: var(--surface);
+  border: 1px solid var(--hairline);
+  border-radius: 1.2rem;
+  padding: 1.8rem 1.5rem;
+  max-width: 22rem;
+  width: 100%;
+  text-align: center;
+  display: grid;
+  gap: 0.8rem;
+  animation: milestone-pop 260ms cubic-bezier(0.18, 0.89, 0.32, 1.28);
+}
+
+.milestone-emoji {
+  font-size: 3rem;
+  line-height: 1;
+}
+
+.milestone-card h2 {
+  font-size: 1.3rem;
+}
+
+@keyframes milestone-fade {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes milestone-pop {
+  from { opacity: 0; transform: scale(0.9) translateY(8px); }
+  to { opacity: 1; transform: scale(1) translateY(0); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .milestone-overlay,
+  .milestone-card {
+    animation: none;
+  }
+}
+
+.landing {
+  padding-bottom: 3rem;
+  display: grid;
+  gap: 2rem;
+}
+
+.landing-hero {
+  display: grid;
+  gap: 0.9rem;
+  text-align: center;
+  padding-top: 2rem;
+}
+
+.landing-hero h1 {
+  font-size: 1.9rem;
+  line-height: 1.2;
+}
+
+.landing-cta {
+  justify-self: center;
+  padding-left: 2.2rem;
+  padding-right: 2.2rem;
+  margin-top: 0.4rem;
+}
+
+.landing-section {
+  display: grid;
+  gap: 0.8rem;
+}
+
+.landing-step {
+  grid-template-columns: auto 1fr;
+  align-items: start;
+  gap: 0.8rem;
+}
+
+.landing-step-num {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 1.9rem;
+  height: 1.9rem;
+  border-radius: 999px;
+  background: var(--gold);
+  color: #1b160c;
+  font-weight: 700;
+  font-size: 0.95rem;
+  flex-shrink: 0;
+}
 
 @media (max-width: 360px) {
   .layout {

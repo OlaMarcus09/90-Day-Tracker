@@ -1,7 +1,7 @@
 {
-  "name": "90-Day Tracker",
-  "short_name": "90-Day",
-  "description": "Daily 90-day transformation tracker",
+  "name": "Compound",
+  "short_name": "Compound",
+  "description": "Compound your daily effort into a 90-day transformation — solo or with a team.",
   "start_url": "/",
   "display": "standalone",
   "background_color": "#f7f3eb",
